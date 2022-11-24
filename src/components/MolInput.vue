@@ -90,7 +90,7 @@ export default {
         selfies.decoder(v).then(res => {
           if (res) {
             this.smiles_str = res;
-            this.$emit("smiles-update", this.smiles_str);
+            this.$emit("smiles-update", [this.smiles_str]);
             this.$emit("selfies-update", this.selfies_str);
             this.parserError = false;
           } else {

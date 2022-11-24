@@ -25,7 +25,7 @@
       </div>
     </section>
     <section>
-      <mol-canvas :smiles="smiles" v-on:selection-update="selectedIndex = $event">
+      <mol-canvas :ready="rdkitReady" :smiles="smiles" v-on:selection-update="selectedIndex = $event">
       </mol-canvas>
     </section>
     <section>
@@ -60,16 +60,26 @@ export default {
   data() {
     return {
       selfies: "",
-      smiles: "",
+      smiles: [],
       viewWidth: 800,
       selectedIndex: -1,
       version: pjson["version"],
       past: [],
       resultsReady: false,
+      rdkitReady: false
     };
   },
   mounted: function () {
-    this.viewWidth = this.$refs.inputcontainer.clientWidth;
+    window
+      .initRDKitModule()
+      .then((RDKit) => {
+        console.log("RDKit version: " + RDKit.version());
+        window.RDKit = RDKit;
+        this.rdkitReady = true
+      })
+      .catch(() => {
+        console.log("RDKit failed to load");
+      });
   },
   computed: {
     screen() {

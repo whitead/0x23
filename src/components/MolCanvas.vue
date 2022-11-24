@@ -1,36 +1,27 @@
 <template>
-    <canvas ref="canvas" width="960" height="200"> </canvas>
+    <div class="card-container">
+        <div v-for="(s, i) in smiles" :key="s">
+            <div class="card">
+                <canvas :id="'canvas' + i"></canvas>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script>
 import { debounce } from "lodash-es";
-//import initRDKitModule from "@rdkit/rdkit";
 export default {
     name: "MolCanvas",
     props: {
-        smiles: String,
-        viewWidth: Number,
-        palette: {
-            type: String,
-            default: 'light'
-        }
+        smiles: Array,
+        ready: Boolean
     },
     data() {
         return {
-            ready: false,
         };
     },
     mounted: function () {
-        window
-            .initRDKitModule()
-            .then((RDKit) => {
-                console.log("RDKit version: " + RDKit.version());
-                window.RDKit = RDKit;
-                this.ready = true
-            })
-            .catch(() => {
-                console.log("RDKit failed to load");
-            });
+
     },
     watch: {
         smiles: debounce(function () {
@@ -45,15 +36,20 @@ export default {
 
             return [r, g, b];
         },
-        updateSmiles: function (s) {
-            if (this.ready && s.length > 0) {
-                let mol = window.RDKit.get_mol(s);
-                const details = {
-                    'backgroundColour': this.convertHexToRgb('#f5f4e9'),
-                    'offsetx': 25,
-                    'offsety': 25
-                };
-                mol.draw_to_canvas_with_highlights(this.$refs.canvas, JSON.stringify(details));
+        updateSmiles: function (smiles) {
+            if (!Array.isArray(smiles)) {
+                smiles = [smiles];
+            }
+            if (this.ready && smiles.length > 0) {
+                smiles.map((s, i) => {
+                    let mol = window.RDKit.get_mol(s);
+                    const details = {
+                        'backgroundColour': this.convertHexToRgb('#f5f4e9'),
+                        'offsetx': 0,
+                        'offsety': 0
+                    };
+                    mol.draw_to_canvas_with_highlights(this.$refs['canvas' + i], JSON.stringify(details));
+                });
             }
         },
     }
@@ -61,5 +57,11 @@ export default {
 </script>
 
 <style lang="scss">
+.card {
+    border: 1px solid #000;
+}
 
+.card-container {
+    flex-wrap: wrap;
+}
 </style>

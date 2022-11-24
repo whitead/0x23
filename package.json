@@ -1,0 +1,28 @@
+{
+  "name": "0xe4cc",
+  "version": "0.0.1",
+  "description": "0xe4cc",
+  "browserslist": "> 0.5%, last 2 versions, not dead",
+  "scripts": {
+    "start": "parcel src/index.html",
+    "build": "parcel build src/index.html --no-cache --no-scope-hoist --public-url https://0xe4.cc/"
+  },
+  "author": "Andrew White",
+  "license": "MIT",
+  "alias": {
+    "process": false
+  },
+  "dependencies": {
+    "@rdkit/rdkit": "^2022.9.1-1.0.0",
+    "bulma": "^0.9.4",
+    "lodash-es": "^4.17.21",
+    "parcel": "^2.8.0",
+    "vue": "^3.2.45"
+  },
+  "devDependencies": {
+    "@parcel/transformer-sass": "^2.8.0",
+    "@parcel/transformer-vue": "^2.8.0",
+    "stream-browserify": "^3.0.0",
+    "string_decoder": "^1.3.0"
+  }
+}

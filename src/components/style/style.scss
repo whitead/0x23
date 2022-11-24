@@ -1,0 +1,23 @@
+// 1. Import the initial variables
+@import "npm:bulma/sass/utilities/initial-variables.sass";
+@import "npm:bulma/sass/utilities/functions.sass";
+//@import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding&display=swap');
+//@import url('https://fonts.googleapis.com/css2?family=Courier+Prime&display=swap');
+
+$family-sans: sans-serif;
+$family-mono: monospace;
+// old paper background
+$body-background-color: #f5f4e9;
+
+$primary: #38372f; //#7DCFB6;
+// Use the existing orange as the danger color
+$danger: #b1332c;
+$warning: #e5ec09;
+$info: #d0a927; //#2D7AB9;
+$family-primary: $family-mono;
+$shadow: "";
+$card-shadow: "";
+$card-header-shadow: "";
+
+// 6. Import the rest of Bulma
+@import "npm:bulma/bulma.sass";

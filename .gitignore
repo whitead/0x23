@@ -102,3 +102,19 @@ dist
 
 # TernJS port file
 .tern-port
+
+
+static/*
+*.pyc
+*/__pycache__/*
+*/.pytest_cache/*
+client/node_modules/*
+client/coverage
+*~
+.parcel-cache/
+.cache/
+dist/
+node_modules/
+**.npz
+ml/tuning
+ml/.ipynb_checkpoints/

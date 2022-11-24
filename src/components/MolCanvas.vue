@@ -4,7 +4,7 @@
 
 <script>
 import { debounce } from "lodash-es";
-import { RDKitLoader } from "@rdkit/rdkit";
+//import initRDKitModule from "@rdkit/rdkit";
 export default {
     name: "MolCanvas",
     props: {
@@ -17,42 +17,44 @@ export default {
     },
     data() {
         return {
-            drawer: null,
-            error: false,
+            ready: false,
         };
     },
     mounted: function () {
-        // load rdkit
-        new RDKitLoader().then(() => {
-            this.renewDrawer();
-        }).catch((err) => {
-            console.log(err);
-            this.error = true;
-        });
+        window
+            .initRDKitModule()
+            .then((RDKit) => {
+                console.log("RDKit version: " + RDKit.version());
+                window.RDKit = RDKit;
+                this.ready = true
+            })
+            .catch(() => {
+                console.log("RDKit failed to load");
+            });
     },
     watch: {
         smiles: debounce(function () {
             this.updateSmiles(this.smiles);
-        }, 500),
-        viewWidth: function () {
-            this.$refs.canvas.width = this.viewWidth;
-            this.renewDrawer();
-        },
+        }, 500)
     },
     methods: {
-        updateSmiles: function (s) {
-            if (this.drawer && s.length > 0) {
-                SmilesDrawer.parse(s, (tree) => {
-                    this.drawer.draw(tree, this.$refs.canvas, this.palette);
-                }, (err) => {
-                    console.log(err);
-                });
-            }
+        convertHexToRgb: function (hex) {
+            let r = parseInt(hex.slice(1, 3), 16) / 255;
+            let g = parseInt(hex.slice(3, 5), 16) / 255;
+            let b = parseInt(hex.slice(5, 7), 16) / 255;
+
+            return [r, g, b];
         },
-        renewDrawer: function () {
-            // set to current width of canvas
-            let mol = RDKitModule.get_mol(smiles);
-            mol.draw_to_canvas(this.$refs.canvas, -1, -1);
+        updateSmiles: function (s) {
+            if (this.ready && s.length > 0) {
+                let mol = window.RDKit.get_mol(s);
+                const details = {
+                    'backgroundColour': this.convertHexToRgb('#f5f4e9'),
+                    'offsetx': 25,
+                    'offsety': 25
+                };
+                mol.draw_to_canvas_with_highlights(this.$refs.canvas, JSON.stringify(details));
+            }
         },
     }
 }

@@ -1,4 +1,4 @@
-import { RDKitLoader } from "@rdkit/rdkit";
+
 
 const initRDKit = (() => {
     let rdkitLoadingPromise = RDKitLoader();

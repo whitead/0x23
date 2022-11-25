@@ -2,12 +2,12 @@
     <div class="card-container">
         <div class="canvas-card">
             <p>{{ rootSmiles }}</p>
-            <canvas ref="root-canvas"></canvas>
+            <canvas width="150" height="100" ref="root-canvas"></canvas>
         </div>
         <template v-if="readyToPlot">
             <div class="canvas-card" v-for="i in count" :key="i" ref="canvases">
                 <p v-if="this.my_names.length > i - 1">{{ this.my_names[i - 1] }}</p>
-                <canvas></canvas>
+                <canvas width="150" height="100"></canvas>
             </div>
         </template>
         <template v-else>
@@ -29,6 +29,7 @@ export default {
         names: Array,
         count: Number,
         resultsCount: Number,
+        finished: Boolean
     },
     data() {
         return {
@@ -46,6 +47,11 @@ export default {
             if (this.readyToPlot && this.$refs.canvases) {
                 if (this.reportAt.has(this.resultsCount))
                     this.updateSmiles(this.smiles);
+            }
+        },
+        finished: function () {
+            if (this.readyToPlot) {
+                this.updateSmiles(this.smiles);
             }
         },
         rootSmiles: debounce(function () {
@@ -82,15 +88,22 @@ export default {
         },
         updateSmiles: function (smiles) {
             // compute fingerprints first
+
             const root_fp = window.RDKit.get_mol(this.rootSmiles).get_morgan_fp_as_uint8array();
+            const smilesResults = new Set(this.rootSmiles);
             const mols = []
             this.my_names = []
             for (let i = 0; i < smiles.length; i++) {
+                if (smilesResults.has(smiles[i]))
+                    continue;
+                smilesResults.add(smiles[i]);
                 let mol = window.RDKit.get_mol(smiles[i]);
                 let fp = mol.get_morgan_fp_as_uint8array();
                 // compute tanimoto similarity with root
                 let tanimoto = this.tanimotoSimilarty(root_fp, fp);
-                mols.push({ mol: smiles[i], similarity: tanimoto, name: this.names[i] + ' (' + tanimoto.toFixed(2) + ')' });
+                if (tanimoto === 1.0)
+                    continue
+                mols.push({ mol: smiles[i], similarity: tanimoto, name: ' ' + this.names[i] + '(' + tanimoto.toFixed(2) + ') |' });
                 mol.delete();
             }
             // sort by similarity
@@ -106,8 +119,8 @@ export default {
                 const details = {
                     'backgroundColour': this.convertHexToRgb('#f5f4e9'),
                     'offsetx': 0,
-                    'offsety': 0,
-                    'fixedScale': false
+                    'centreMoleculesBeforeDrawing': true,
+                    'fixedScale': true,
                 };
                 let canvas = this.$refs.canvases[i].querySelector('canvas');
                 mol.draw_to_canvas_with_highlights(canvas, JSON.stringify(details));

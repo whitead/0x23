@@ -17,7 +17,9 @@
       <div ref="inputcontainer" class="container">
         <div class="columns is-centered">
           <div class="column">
-            <p>{{ stonedResults }} / {{ stonedCount }} | {{ selfies }} | {{ this.names[this.stonedResults - 1] }}</p>
+            <p>{{ stonedResults }} / {{ stonedCount }} | {{ selfies }} | {{ this.names[this.stonedResults
+                - 1]
+            }}</p>
             <mol-input v-on:selfies-update="selfies = $event" v-on:smiles-update="smiles = $event"
               v-on:stoned-start="stoned" v-on:stoned-repeat="stonedRepeat" :ready="!stonedProgressing"
               v-on:selfieslib-ready="selfiesLib = $event">
@@ -28,8 +30,9 @@
     </section>
     <section>
       <div class="container is-fluid">
-        <mol-canvas :count="24" :names="names" :ready="rdkitReady" :rootSmiles="smiles"
-          v-on:selection-update="selectedIndex = $event" :smiles="mutatedSmiles" :resultsCount="stonedResults">
+        <mol-canvas :count="isMobile() ? 25 : 100" :names="names" :ready="rdkitReady" :rootSmiles="smiles"
+          :finished="!stonedProgressing" v-on:selection-update="selectedIndex = $event" :smiles="mutatedSmiles"
+          :resultsCount="stonedResults">
         </mol-canvas>
       </div>
     </section>
@@ -73,6 +76,7 @@ export default {
       viewWidth: 800,
       stonedCount: 1000,
       stonedResults: 0,
+      maxMutations: 2,
       stonedProgressing: false,
       selectedIndex: -1,
       version: pjson["version"],
@@ -104,20 +108,24 @@ export default {
       this.names = [];
       this.stonedResults = 0;
       const results = new Set();
-      results.add(this.selfies.join(''));
+      results.add(this.selfies.join('|'));
       if (this.selfiesLib) {
         this.vocabSize = await this.selfiesLib.vocabSize();
         for (let i = 0; this.stonedResults < this.stonedCount; i++) {
+          let mutated = 0;
           let new_selfies = this.selfies.map((s) => {
-            if (1 / this.selfies.length < Math.random()) {
+            if (mutated < this.maxMutations && 1 / this.selfies.length < Math.random()) {
+              mutated += 1;
               return Math.floor(Math.random() * this.vocabSize);
             } else {
               return s;
             }
           });
-          if (0.1 < Math.random())
+          while (mutated < this.maxMutations) {
             new_selfies.push(Math.floor(Math.random() * this.vocabSize));
-          let n = new_selfies.join(',')
+            mutated += 1;
+          }
+          let n = new_selfies.join('|')
           if (results.has(n))
             continue
           this.mutatedSelfies.push(new_selfies);
@@ -135,27 +143,33 @@ export default {
     },
     stonedRepeat: async function () {
       this.stonedProgressing = true;
-      this.stonedResults = 0;
-      this.mutatedSmiles = [];
-      this.names = [];
+      let newResults = 0;
+      //this.stonedResults = 0;
+      //this.mutatedSmiles = [];
+      //this.names = [];
       const results = new Set();
       results.add(this.selfies.join(''));
       if (this.selfiesLib) {
-        for (let i = 0; this.stonedResults < this.stonedCount; i++) {
+        for (let i = 0; newResults < this.stonedCount; i++) {
+          let mutated = 0;
           let new_selfies = this.mutatedSelfies[i % this.stonedCount].map((s) => {
-            if (1 / this.selfies.length < Math.random()) {
+            if (mutated < this.maxMutations && 1 / this.selfies.length < Math.random()) {
+              mutated += 1;
               return Math.floor(Math.random() * this.vocabSize);
             } else {
               return s;
             }
           });
-          if (0.1 < Math.random())
+          while (mutated < this.maxMutations) {
             new_selfies.push(Math.floor(Math.random() * this.vocabSize));
+            mutated += 1;
+          }
           let n = new_selfies.join(',')
           if (results.has(n))
             continue
           let j = this.names.length;
           this.mutatedSelfies[j] = new_selfies;
+          newResults += 1
           this.stonedResults += 1
           results.add(n)
           this.names.push(n);
@@ -166,6 +180,13 @@ export default {
         }
       }
       this.stonedProgressing = false;
+    },
+    isMobile() {
+      if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        return true
+      } else {
+        return false
+      }
     }
   }
 };

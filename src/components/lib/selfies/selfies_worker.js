@@ -48,6 +48,7 @@ loadPyodide().then((pyodide) => {
                         to_remove.append(ai)
                 # remove [P],[#P],[=P]
                 to_remove.extend(["[P]", "[#P]", "[=P]"])
+                to_remove.extend(["[B]", "[#B]", "[=B]"])
 
                 a -= set(to_remove)
                 a.add("[O-1]")

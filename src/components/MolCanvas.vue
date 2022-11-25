@@ -32,18 +32,21 @@ export default {
     },
     data() {
         return {
-            my_names: []
+            my_names: [],
+            reportAt: new Set([10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000])
         };
     },
     computed: {
         readyToPlot() {
-            return this.ready && this.resultsCount > 5 * this.count;
+            return this.ready && this.smiles.length > 2 * this.count;
         },
     },
     watch: {
         resultsCount: function () {
-            if (this.readyToPlot && this.$refs.canvases)
-                this.updateSmiles(this.smiles);
+            if (this.readyToPlot && this.$refs.canvases) {
+                if (this.reportAt.has(this.resultsCount))
+                    this.updateSmiles(this.smiles);
+            }
         },
         rootSmiles: debounce(function () {
             this.updateRootSmiles(this.rootSmiles);
@@ -69,29 +72,26 @@ export default {
                 mol.draw_to_canvas_with_highlights(canvas, JSON.stringify(details));
             }
         },
-        tanimotoSimilarty: function (fp1_arr, fp2_arr) {
-            let fp1_len = fp1_arr.length;
-            let fp2_len = fp2_arr.length;
-            let fp1_set = new Set(fp1_arr);
-            let fp2_set = new Set(fp2_arr);
-            let intersection = new Set([...fp1_set].filter(x => fp2_set.has(x)));
-            let union = new Set([...fp1_set, ...fp2_set]);
-            let intersection_len = intersection.size;
-            let union_len = union.size;
-            let tanimoto = intersection_len / union_len;
-            return tanimoto;
+        tanimotoSimilarty: function (fp1, fp2) {
+            fp1 = fp1.map(x => x > 0 ? 1 : 0);
+            fp2 = fp2.map(x => x > 0 ? 1 : 0);
+            let fp1sum = fp1.reduce((a, b) => a + b, 0);
+            let fp2sum = fp2.reduce((a, b) => a + b, 0);
+            let fp1fp2sum = fp1.map((x, i) => x * fp2[i]).reduce((a, b) => a + b, 0);
+            return fp1fp2sum / (fp1sum + fp2sum - fp1fp2sum);
         },
         updateSmiles: function (smiles) {
             // compute fingerprints first
-            const root_fp = window.RDKit.get_mol(this.rootSmiles).get_pattern_fp_as_uint8array();
+            const root_fp = window.RDKit.get_mol(this.rootSmiles).get_morgan_fp_as_uint8array();
             const mols = []
             this.my_names = []
             for (let i = 0; i < smiles.length; i++) {
                 let mol = window.RDKit.get_mol(smiles[i]);
-                let fp = mol.get_pattern_fp_as_uint8array();
+                let fp = mol.get_morgan_fp_as_uint8array();
                 // compute tanimoto similarity with root
                 let tanimoto = this.tanimotoSimilarty(root_fp, fp);
-                mols.push({ mol: mol, similarity: tanimoto, name: this.names[i] + ' (' + tanimoto.toFixed(2) + ')' });
+                mols.push({ mol: smiles[i], similarity: tanimoto, name: this.names[i] + ' (' + tanimoto.toFixed(2) + ')' });
+                mol.delete();
             }
             // sort by similarity
             mols.sort((a, b) => (a.similarity < b.similarity) ? 1 : -1);
@@ -101,17 +101,17 @@ export default {
         drawSmiles: function (mols) {
             this.my_names = []
             mols.slice(0, this.count).map((m, i) => {
-
+                let mol = window.RDKit.get_mol(m.mol);
                 this.my_names.push(m.name)
                 const details = {
                     'backgroundColour': this.convertHexToRgb('#f5f4e9'),
                     'offsetx': 0,
                     'offsety': 0,
-                    'fixedScale': true
+                    'fixedScale': false
                 };
                 let canvas = this.$refs.canvases[i].querySelector('canvas');
-                m.mol.draw_to_canvas_with_highlights(canvas, JSON.stringify(details));
-                delete m.mol;
+                mol.draw_to_canvas_with_highlights(canvas, JSON.stringify(details));
+                mol.delete();
             });
         }
     },

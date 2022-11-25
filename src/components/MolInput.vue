@@ -8,11 +8,14 @@
           'input': true,
           'is-danger': parserError
         }" spellcheck="false" autocorrect="off" type="text" :placeholder="selfiesStatus ? 'SMILES' : loadingMessage"
-          v-model="internalSMILES" autofocus @keyup.enter="finishMol" />
+          v-model="internalSMILES" autofocus @keyup.enter="startStoned" />
       </div>
       <div class="control">
-        <a class="button is-info" :class="{ 'is-loading': !ready && selfies_str.length > 0 }" @click="finishMol">
+        <a class="button is-info" :class="{ 'is-loading': !ready && selfies_str.length > 0 }" @click="startStoned">
           Start
+        </a>
+        <a class="button is-primary" :class="{ 'is-loading': !ready && selfies_str.length > 0 }" @click="repeatStoned">
+          Repeat
         </a>
       </div>
     </div>
@@ -101,8 +104,11 @@ export default {
     },
   },
   methods: {
-    finishMol: function () {
+    startStoned: function () {
       this.$emit("stoned-start");
+    },
+    repeatStoned: function () {
+      this.$emit("stoned-repeat");
     },
     discardKeys: function (evt) {
       evt.preventDefault();

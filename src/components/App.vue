@@ -17,8 +17,10 @@
       <div ref="inputcontainer" class="container">
         <div class="columns is-centered">
           <div class="column">
+            <p>{{ stonedResults }} / {{ stonedCount }} | {{ selfies }} | {{ this.names[this.stonedResults - 1] }}</p>
             <mol-input v-on:selfies-update="selfies = $event" v-on:smiles-update="smiles = $event"
-              v-on:stoned-start="stoned" :ready="!stonedProgressing" v-on:selfieslib-ready="selfiesLib = $event">
+              v-on:stoned-start="stoned" v-on:stoned-repeat="stonedRepeat" :ready="!stonedProgressing"
+              v-on:selfieslib-ready="selfiesLib = $event">
             </mol-input>
           </div>
         </div>
@@ -66,6 +68,7 @@ export default {
       smiles: "",
       selfiesLib: null,
       mutatedSmiles: [],
+      mutatedSelfies: [],
       names: [],
       viewWidth: 800,
       stonedCount: 1000,
@@ -99,27 +102,64 @@ export default {
       this.stonedProgressing = true;
       this.mutatedSmiles = [];
       this.names = [];
-      stonedResults = 0;
+      this.stonedResults = 0;
       const results = new Set();
       results.add(this.selfies.join(''));
       if (this.selfiesLib) {
         this.vocabSize = await this.selfiesLib.vocabSize();
-        for (let i = 0; i < this.stonedCount; i++) {
-          s = this.selfies.map((s) => {
+        for (let i = 0; this.stonedResults < this.stonedCount; i++) {
+          let new_selfies = this.selfies.map((s) => {
             if (1 / this.selfies.length < Math.random()) {
               return Math.floor(Math.random() * this.vocabSize);
             } else {
               return s;
             }
           });
-          let n = s.join('')
+          if (0.1 < Math.random())
+            new_selfies.push(Math.floor(Math.random() * this.vocabSize));
+          let n = new_selfies.join(',')
           if (results.has(n))
             continue
+          this.mutatedSelfies.push(new_selfies);
           this.stonedResults += 1
           results.add(n)
           let j = this.names.length;
           this.names.push(n);
-          await this.selfiesLib.decoder(s).then((smiles) => {
+          await this.selfiesLib.decoder(new_selfies).then((smiles) => {
+            this.mutatedSmiles.push(smiles);
+            this.names[j] = smiles;
+          });
+        }
+      }
+      this.stonedProgressing = false;
+    },
+    stonedRepeat: async function () {
+      this.stonedProgressing = true;
+      this.stonedResults = 0;
+      this.mutatedSmiles = [];
+      this.names = [];
+      const results = new Set();
+      results.add(this.selfies.join(''));
+      if (this.selfiesLib) {
+        for (let i = 0; this.stonedResults < this.stonedCount; i++) {
+          let new_selfies = this.mutatedSelfies[i % this.stonedCount].map((s) => {
+            if (1 / this.selfies.length < Math.random()) {
+              return Math.floor(Math.random() * this.vocabSize);
+            } else {
+              return s;
+            }
+          });
+          if (0.1 < Math.random())
+            new_selfies.push(Math.floor(Math.random() * this.vocabSize));
+          let n = new_selfies.join(',')
+          if (results.has(n))
+            continue
+          let j = this.names.length;
+          this.mutatedSelfies[j] = new_selfies;
+          this.stonedResults += 1
+          results.add(n)
+          this.names.push(n);
+          await this.selfiesLib.decoder(new_selfies).then((smiles) => {
             this.mutatedSmiles.push(smiles);
             this.names[j] = smiles;
           });

@@ -8,13 +8,13 @@
           'input': true,
           'is-danger': parserError
         }" spellcheck="false" autocorrect="off" type="text" :placeholder="selfiesStatus ? 'SMILES' : loadingMessage"
-          v-model="internalSMILES" autofocus @keyup.enter="updateSMILES" />
+          v-model="internalSMILES" autofocus @keyup.enter="finishMol" />
       </div>
-      <!-- <div class="control">
+      <div class="control">
         <a class="button is-info" :class="{ 'is-loading': !ready && selfies_str.length > 0 }" @click="finishMol">
-          Save
+          Start
         </a>
-      </div> -->
+      </div>
     </div>
     <!-- <div class="field has-addons">
       <div class="control is-expanded" :class="{ 'is-loading': !selfiesStatus }">
@@ -90,7 +90,7 @@ export default {
         selfies.decoder(v).then(res => {
           if (res) {
             this.smiles_str = res;
-            this.$emit("smiles-update", [this.smiles_str]);
+            this.$emit("smiles-update", this.smiles_str);
             this.$emit("selfies-update", this.selfies_str);
             this.parserError = false;
           } else {
@@ -102,7 +102,7 @@ export default {
   },
   methods: {
     finishMol: function () {
-      this.$emit("selfies-push");
+      this.$emit("stoned-start");
     },
     discardKeys: function (evt) {
       evt.preventDefault();

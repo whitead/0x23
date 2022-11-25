@@ -1,9 +1,12 @@
 <template>
     <div class="card-container">
-        <div v-for="(s, i) in smiles" :key="s">
-            <div class="card">
-                <canvas :id="'canvas' + i"></canvas>
-            </div>
+        <div class="canvas-card">
+            <p>root canvas</p>
+            <canvas ref="root-canvas"></canvas>
+        </div>
+        <div class="canvas-card" v-for="i in count" :key="i" ref="canvases">
+            <p>canvas {{ i }}</p>
+            <canvas></canvas>
         </div>
     </div>
 </template>
@@ -13,11 +16,14 @@ import { debounce } from "lodash-es";
 export default {
     name: "MolCanvas",
     props: {
+        rootSmiles: String,
         smiles: Array,
+        count: Number,
         ready: Boolean
     },
     data() {
         return {
+            name: ""
         };
     },
     mounted: function () {
@@ -26,7 +32,10 @@ export default {
     watch: {
         smiles: debounce(function () {
             this.updateSmiles(this.smiles);
-        }, 500)
+        }, 500),
+        rootSmiles: debounce(function () {
+            this.updateRootSmiles(this.rootSmiles);
+        }, 500),
     },
     methods: {
         convertHexToRgb: function (hex) {
@@ -36,10 +45,19 @@ export default {
 
             return [r, g, b];
         },
-        updateSmiles: function (smiles) {
-            if (!Array.isArray(smiles)) {
-                smiles = [smiles];
+        updateRootSmiles: function (smiles) {
+            if (this.ready && smiles.length > 0) {
+                let mol = window.RDKit.get_mol(smiles);
+                const details = {
+                    'backgroundColour': this.convertHexToRgb('#f5f4e9'),
+                    'offsetx': 0,
+                    'offsety': 0
+                };
+                let canvas = this.$refs['root-canvas'];
+                mol.draw_to_canvas_with_highlights(canvas, JSON.stringify(details));
             }
+        },
+        updateSmiles: function (smiles) {
             if (this.ready && smiles.length > 0) {
                 smiles.map((s, i) => {
                     let mol = window.RDKit.get_mol(s);
@@ -48,7 +66,8 @@ export default {
                         'offsetx': 0,
                         'offsety': 0
                     };
-                    mol.draw_to_canvas_with_highlights(this.$refs['canvas' + i], JSON.stringify(details));
+                    let canvas = this.$refs.canvases[i].querySelector('canvas');
+                    mol.draw_to_canvas_with_highlights(canvas, JSON.stringify(details));
                 });
             }
         },
@@ -57,11 +76,13 @@ export default {
 </script>
 
 <style lang="scss">
-.card {
-    border: 1px solid #000;
+.canvas-card {
+    //border: 1px solid #000;
+    flex-wrap: wrap;
 }
 
 .card-container {
+    display: flex;
     flex-wrap: wrap;
 }
 </style>

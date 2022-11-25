@@ -18,15 +18,17 @@
         <div class="columns is-centered">
           <div class="column">
             <mol-input v-on:selfies-update="selfies = $event" v-on:smiles-update="smiles = $event"
-              v-on:selfies-push="pushSelfies" :ready="resultsReady">
+              v-on:stoned-start="stoned" :ready="resultsReady">
             </mol-input>
           </div>
         </div>
       </div>
     </section>
     <section>
-      <mol-canvas :ready="rdkitReady" :smiles="smiles" v-on:selection-update="selectedIndex = $event">
-      </mol-canvas>
+      <div class="container is-fluid">
+        <mol-canvas :count="24" :ready="rdkitReady" :rootSmiles="smiles" v-on:selection-update="selectedIndex = $event">
+        </mol-canvas>
+      </div>
     </section>
     <section>
       <div class="container">
@@ -60,12 +62,11 @@ export default {
   data() {
     return {
       selfies: "",
-      smiles: [],
+      smiles: "",
       viewWidth: 800,
       selectedIndex: -1,
       version: pjson["version"],
-      past: [],
-      resultsReady: false,
+      resultsReady: true,
       rdkitReady: false
     };
   },
@@ -87,11 +88,9 @@ export default {
     },
   },
   methods: {
-    pushSelfies() {
+    stoned() {
       if (this.resultsReady) {
-        this.past.push({
-          selfies: this.selfies,
-        });
+        console.log(this.selfies);
       }
     }
   }

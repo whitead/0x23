@@ -17,7 +17,8 @@
       <div ref="inputcontainer" class="container">
         <div class="columns is-centered">
           <div class="column">
-            <p>{{ stonedResults }} / {{ stonedCount }} | {{ selfies }} | {{ this.names[this.stonedResults
+            <p>{{ stonedResults }} / {{ stonedCount }} | {{
+                this.names[this.stonedResults
                 - 1]
             }}</p>
             <mol-input v-on:selfies-update="selfies = $event" v-on:smiles-update="smiles = $event"

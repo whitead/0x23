@@ -2,12 +2,12 @@
     <div class="card-container">
         <div class="canvas-card">
             <p>{{ rootSmiles }}</p>
-            <canvas width="150" height="100" ref="root-canvas"></canvas>
+            <canvas width="200" height="150" ref="root-canvas"></canvas>
         </div>
         <template v-if="readyToPlot">
             <div class="canvas-card" v-for="i in count" :key="i" ref="canvases">
                 <p v-if="this.my_names.length > i - 1">{{ this.my_names[i - 1] }}</p>
-                <canvas width="150" height="100"></canvas>
+                <canvas width="200" height="150"></canvas>
             </div>
         </template>
         <template v-else>
@@ -135,10 +135,13 @@ export default {
 .canvas-card {
     //border: 1px solid #000;
     flex-wrap: wrap;
+    text-align: center;
+
 }
 
 .card-container {
     display: flex;
     flex-wrap: wrap;
+    justify-content: space-between;
 }
 </style>

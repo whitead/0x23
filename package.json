@@ -1,6 +1,6 @@
 {
   "name": "0xe4cc",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "0xe4cc",
   "browserslist": "> 0.5%, last 2 versions, not dead",
   "scripts": {

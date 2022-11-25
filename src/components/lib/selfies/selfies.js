@@ -2,6 +2,7 @@ let selfieWorker = null;
 const resolvers = {};
 let id = 0;
 const MAX_ID = 2 ** 10
+let _vocabSize = null;
 
 const startSelfiesWorker = () => {
     if (selfieWorker !== null)
@@ -14,6 +15,11 @@ const startSelfiesWorker = () => {
         const data = e.data;
         const mid = data[1];
         const result = data[2];
+
+        if (data[0] === 'vocab-size') {
+            _vocabSize = result;
+        }
+
         resolvers[mid](result);
         delete resolvers[mid];
     }
@@ -52,11 +58,27 @@ const encoder = (s) => {
     return new Promise(resolve => resolvers[id] = resolve);
 }
 
+const vocabSize = () => {
+    if (_vocabSize === null) {
+        if (selfieWorker === null) {
+            return new Promise((resolve, reject) =>
+                reject(new Error('Must call startSelfiesWorker() first')));
+        }
+        id = (id + 1) % MAX_ID;
+        selfieWorker.postMessage(['vocab-size', id, null]);
+        return new Promise(resolve => resolvers[id] = resolve);
+    } else {
+        return new Promise(resolve => resolve(_vocabSize));
+    }
+
+}
+
 const selfies = {
     startSelfiesWorker,
     selfiesLoadStatus,
     decoder,
-    encoder
+    encoder,
+    vocabSize
 };
 
 export default selfies;

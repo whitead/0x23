@@ -18,15 +18,18 @@
         <div class="columns is-centered">
           <div class="column">
             <mol-input v-on:selfies-update="selfies = $event" v-on:smiles-update="smiles = $event"
-              v-on:selfies-push="pushSelfies" :ready="resultsReady">
+              v-on:stoned-start="stoned" :ready="!stonedProgressing" v-on:selfieslib-ready="selfiesLib = $event">
             </mol-input>
           </div>
         </div>
       </div>
     </section>
     <section>
-      <mol-canvas :smiles="smiles" v-on:selection-update="selectedIndex = $event">
-      </mol-canvas>
+      <div class="container is-fluid">
+        <mol-canvas :count="24" :names="names" :ready="rdkitReady" :rootSmiles="smiles"
+          v-on:selection-update="selectedIndex = $event" :smiles="mutatedSmiles" :resultsCount="stonedResults">
+        </mol-canvas>
+      </div>
     </section>
     <section>
       <div class="container">
@@ -61,15 +64,30 @@ export default {
     return {
       selfies: "",
       smiles: "",
+      selfiesLib: null,
+      mutatedSmiles: [],
+      names: [],
       viewWidth: 800,
+      stonedCount: 1000,
+      stonedResults: 0,
+      stonedProgressing: false,
       selectedIndex: -1,
       version: pjson["version"],
-      past: [],
-      resultsReady: false,
+      rdkitReady: false,
+      vocabSize: 10
     };
   },
   mounted: function () {
-    this.viewWidth = this.$refs.inputcontainer.clientWidth;
+    window
+      .initRDKitModule()
+      .then((RDKit) => {
+        console.log("RDKit version: " + RDKit.version());
+        window.RDKit = RDKit;
+        this.rdkitReady = true
+      })
+      .catch(() => {
+        console.log("RDKit failed to load");
+      });
   },
   computed: {
     screen() {
@@ -77,12 +95,37 @@ export default {
     },
   },
   methods: {
-    pushSelfies() {
-      if (this.resultsReady) {
-        this.past.push({
-          selfies: this.selfies,
-        });
+    stoned: async function () {
+      this.stonedProgressing = true;
+      this.mutatedSmiles = [];
+      this.names = [];
+      stonedResults = 0;
+      const results = new Set();
+      results.add(this.selfies.join(''));
+      if (this.selfiesLib) {
+        this.vocabSize = await this.selfiesLib.vocabSize();
+        for (let i = 0; i < this.stonedCount; i++) {
+          s = this.selfies.map((s) => {
+            if (1 / this.selfies.length < Math.random()) {
+              return Math.floor(Math.random() * this.vocabSize);
+            } else {
+              return s;
+            }
+          });
+          let n = s.join('')
+          if (results.has(n))
+            continue
+          this.stonedResults += 1
+          results.add(n)
+          let j = this.names.length;
+          this.names.push(n);
+          await this.selfiesLib.decoder(s).then((smiles) => {
+            this.mutatedSmiles.push(smiles);
+            this.names[j] = smiles;
+          });
+        }
       }
+      this.stonedProgressing = false;
     }
   }
 };

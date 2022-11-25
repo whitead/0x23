@@ -4,17 +4,17 @@
         v-else>Loading Parser (wait 5-10 seconds)</span></h1> -->
     <div class="field has-addons">
       <div class="control is-expanded" :class="{ 'is-loading': !selfiesStatus }">
-        <input id="smiles-input" :readonly="selfiesStatus ? null : true" aria-label="SMILES input" :class="{
+        <input id="smiles-input" :readonly="(selfiesStatus ? null : true) || !ready" aria-label="SMILES input" :class="{
           'input': true,
           'is-danger': parserError
         }" spellcheck="false" autocorrect="off" type="text" :placeholder="selfiesStatus ? 'SMILES' : loadingMessage"
-          v-model="internalSMILES" autofocus @keyup.enter="updateSMILES" />
+          v-model="internalSMILES" autofocus @keyup.enter="finishMol" />
       </div>
-      <!-- <div class="control">
+      <div class="control">
         <a class="button is-info" :class="{ 'is-loading': !ready && selfies_str.length > 0 }" @click="finishMol">
-          Save
+          Start
         </a>
-      </div> -->
+      </div>
     </div>
     <!-- <div class="field has-addons">
       <div class="control is-expanded" :class="{ 'is-loading': !selfiesStatus }">
@@ -102,7 +102,7 @@ export default {
   },
   methods: {
     finishMol: function () {
-      this.$emit("selfies-push");
+      this.$emit("stoned-start");
     },
     discardKeys: function (evt) {
       evt.preventDefault();
@@ -111,6 +111,7 @@ export default {
       const s = await selfies.selfiesLoadStatus();
       if (s.selfies === 'loaded') {
         this.selfiesStatus = true;
+        this.$emit('selfieslib-ready', selfies);
         const queryParam = new URLSearchParams(window.location.search).get("s");
         if (queryParam) {
           // clean it up

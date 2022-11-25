@@ -4,7 +4,7 @@
         v-else>Loading Parser (wait 5-10 seconds)</span></h1> -->
     <div class="field has-addons">
       <div class="control is-expanded" :class="{ 'is-loading': !selfiesStatus }">
-        <input id="smiles-input" :readonly="selfiesStatus ? null : true" aria-label="SMILES input" :class="{
+        <input id="smiles-input" :readonly="(selfiesStatus ? null : true) || !ready" aria-label="SMILES input" :class="{
           'input': true,
           'is-danger': parserError
         }" spellcheck="false" autocorrect="off" type="text" :placeholder="selfiesStatus ? 'SMILES' : loadingMessage"
@@ -111,6 +111,7 @@ export default {
       const s = await selfies.selfiesLoadStatus();
       if (s.selfies === 'loaded') {
         this.selfiesStatus = true;
+        this.$emit('selfieslib-ready', selfies);
         const queryParam = new URLSearchParams(window.location.search).get("s");
         if (queryParam) {
           // clean it up

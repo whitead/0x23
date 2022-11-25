@@ -16,9 +16,9 @@ const startSelfiesWorker = () => {
         const mid = data[1];
         const result = data[2];
 
-        // if (data[0] === 'vocab-size') {
-        //     _vocabSize = result;
-        // }
+        if (data[0] === 'vocab-size') {
+            _vocabSize = result;
+        }
 
         resolvers[mid](result);
         delete resolvers[mid];
@@ -59,7 +59,7 @@ const encoder = (s) => {
 }
 
 const vocabSize = () => {
-    if (_vocabSize !== null) {
+    if (_vocabSize === null) {
         if (selfieWorker === null) {
             return new Promise((resolve, reject) =>
                 reject(new Error('Must call startSelfiesWorker() first')));
@@ -77,7 +77,8 @@ const selfies = {
     startSelfiesWorker,
     selfiesLoadStatus,
     decoder,
-    encoder
+    encoder,
+    vocabSize
 };
 
 export default selfies;

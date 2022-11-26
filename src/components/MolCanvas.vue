@@ -88,7 +88,6 @@ export default {
         },
         updateSmiles: function (smiles) {
             // compute fingerprints first
-
             const root_fp = window.RDKit.get_mol(this.rootSmiles).get_morgan_fp_as_uint8array();
             const smilesResults = new Set(this.rootSmiles);
             const mols = []
@@ -119,7 +118,7 @@ export default {
                 const details = {
                     'backgroundColour': this.convertHexToRgb('#f5f4e9'),
                     'offsetx': 0,
-                    'centreMoleculesBeforeDrawing': true,
+                    'centreMoleculesBeforeDrawing': false,
                     'fixedScale': true,
                 };
                 let canvas = this.$refs.canvases[i].querySelector('canvas');

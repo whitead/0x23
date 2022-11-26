@@ -156,7 +156,7 @@ export default {
           let new_selfies = this.mutatedSelfies[i % this.stonedCount].map((s) => {
             if (mutated < this.maxMutations && 1 / this.selfies.length < Math.random()) {
               mutated += 1;
-              return Math.floor(Math.random() * this.vocabSize);
+              return Math.floor(Math.random() * (this.vocabSize));
             } else {
               return s;
             }

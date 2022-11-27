@@ -106,6 +106,7 @@ export default {
     stoned: async function () {
       this.stonedProgressing = true;
       this.mutatedSmiles = [];
+      this.mutatedSelfies = [];
       this.names = [];
       this.stonedResults = 0;
       const results = new Set();
@@ -143,6 +144,8 @@ export default {
       this.stonedProgressing = false;
     },
     stonedRepeat: async function () {
+      if (this.stonedResults === 0)
+        return
       this.stonedProgressing = true;
       let newResults = 0;
       //this.stonedResults = 0;

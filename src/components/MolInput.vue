@@ -4,17 +4,19 @@
         v-else>Loading Parser (wait 5-10 seconds)</span></h1> -->
     <div class="field has-addons">
       <div class="control is-expanded" :class="{ 'is-loading': !selfiesStatus }">
-        <input id="smiles-input" :readonly="(selfiesStatus ? null : true) || !ready" aria-label="SMILES input" :class="{
-          'input': true,
-          'is-danger': parserError
-        }" spellcheck="false" autocorrect="off" type="text" :placeholder="selfiesStatus ? 'SMILES' : loadingMessage"
+        <input id="smiles-input" :readonly="(selfiesStatus ? null : true) || !allReady" aria-label="SMILES input"
+          :class="{
+            'input': true,
+            'is-danger': parserError
+          }" spellcheck="false" autocorrect="off" type="text" :placeholder="selfiesStatus ? 'SMILES' : loadingMessage"
           v-model="internalSMILES" autofocus @keyup.enter="startStoned" />
       </div>
       <div class="control">
-        <a class="button is-info" :class="{ 'is-loading': !ready && selfies_str.length > 0 }" @click="startStoned">
-          Start
+        <a class="button is-info" :class="{ 'is-loading': !allReady }" @click="startStoned">
+          {{ smiles_str.length > 0 ? 'Start' : 'Demo' }}
         </a>
-        <a class="button is-primary" :class="{ 'is-loading': !ready && selfies_str.length > 0 }" @click="repeatStoned">
+        <a class="button is-primary" :class="{ 'is-loading': !allReady && selfies_str.length > 0 }"
+          @click="repeatStoned">
           Repeat
         </a>
       </div>
@@ -54,7 +56,9 @@ export default {
       url: window.location.href.split('?')[0],
       selfiesStatus: false,
       error: false,
-      parserError: false
+      parserError: false,
+      doStoned: false,
+      doStonedRepeat: false
     };
   },
   mounted: function () {
@@ -70,17 +74,29 @@ export default {
       set: function (v) {
         v = v.trim();
         this.smiles_str = v
-        this.$emit("smiles-update", this.smiles_str);
-        selfies.encoder(v).then(res => {
-          if (res) {
-            this.selfies_str = res;
-            this.$emit("smiles-update", this.smiles_str);
-            this.$emit("selfies-update", this.selfies_str);
-            this.parserError = false;
-          } else {
-            this.parserError = true;
-          }
-        });
+        if(v.length === 0) {
+          this.selfies_str = ""
+        }
+        else {
+          this.$emit("smiles-update", this.smiles_str);
+          selfies.encoder(v).then(res => {
+            if (res) {
+              this.selfies_str = res;
+              this.$emit("smiles-update", this.smiles_str);
+              this.$emit("selfies-update", this.selfies_str);
+              this.parserError = false;
+              if (this.doStonedRepeat) {
+                this.doStonedRepeat = false;
+                this.$emit("stoned-repeat");
+              }  else if (this.doStoned) {
+                this.doStoned = false;
+                this.$emit("stoned-start");
+              }
+            } else {
+              this.parserError = true;
+            }
+          });
+        }
       },
     },
     internalSELFIES: {
@@ -97,41 +113,53 @@ export default {
             this.$emit("selfies-update", this.selfies_str);
             this.parserError = false;
           } else {
-            this.parserError = true;
-          }
+              this.parserError = true;
+            }
         });
       },
     },
+    allReady: function () {
+        return this.ready && this.selfiesStatus;
+    },
+},
+methods: {
+  startStoned: function () {
+    this.doStoned = true;
+    if (this.smiles_str.length == 0) {
+      //demo
+      this.internalSMILES = 'C1=CC2=C(C=C1O)C(=CN2)CCN'
+    } else
+      this.internalSMILES = this.smiles_str;
+      // trigger update
+
   },
-  methods: {
-    startStoned: function () {
-      this.$emit("stoned-start");
-    },
-    repeatStoned: function () {
-      this.$emit("stoned-repeat");
-    },
-    discardKeys: function (evt) {
-      evt.preventDefault();
-    },
-    checkSelfies: async function () {
-      const s = await selfies.selfiesLoadStatus();
-      if (s.selfies === 'loaded') {
-        this.selfiesStatus = true;
-        this.$emit('selfieslib-ready', selfies);
-        const queryParam = new URLSearchParams(window.location.search).get("s");
-        if (queryParam) {
-          // clean it up
-          this.internalSELFIES = queryParam;
-        }
-      } else if (s.selfies === 'failed') {
-        this.error = true;
-        throw new Error('Selfies failed to load');
-      } else {
-        this.loadingMessage += '.';
-        setTimeout(this.checkSelfies, 100);
+  repeatStoned: function () {
+    this.doStonedRepeat = true
+    // trigger update
+    this.internalSMILES = this.smiles_str;
+  },
+  discardKeys: function (evt) {
+    evt.preventDefault();
+  },
+  checkSelfies: async function () {
+    const s = await selfies.selfiesLoadStatus();
+    if (s.selfies === 'loaded') {
+      this.selfiesStatus = true;
+      this.$emit('selfieslib-ready', selfies);
+      const queryParam = new URLSearchParams(window.location.search).get("s");
+      if (queryParam) {
+        // clean it up
+        this.internalSELFIES = queryParam;
       }
+    } else if (s.selfies === 'failed') {
+      this.error = true;
+      throw new Error('Selfies failed to load');
+    } else {
+      this.loadingMessage += '.';
+      setTimeout(this.checkSelfies, 100);
     }
-  },
+  }
+},
 };
 </script>
 

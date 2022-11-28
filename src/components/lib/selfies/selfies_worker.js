@@ -37,6 +37,7 @@ loadPyodide().then((pyodide) => {
             import micropip
             await micropip.install('selfies==${selfiesVersion}')
             import selfies as sf
+            from selfies.utils.selfies_utils import split_selfies
             def get_basic_alphabet():
                 a = sf.get_semantic_robust_alphabet().copy()
                 # remove cations/anions except oxygen anion
@@ -58,8 +59,15 @@ loadPyodide().then((pyodide) => {
             vocab_stoi = get_basic_alphabet()
             vocab_itos = {v: k for k, v in vocab_stoi.items()}
             vocab_size = len(vocab_stoi)
+            def grow(s):
+                # grow if new tokens are encountered
+                for c in split_selfies(s):
+                    if c not in vocab_stoi:
+                        vocab_stoi[c] = len(vocab_stoi)
+                        vocab_itos[vocab_stoi[c]] = c
             def encoder(s):
                 s = sf.encoder(s)
+                grow(s)
                 return sf.selfies_to_encoding(s, vocab_stoi, enc_type='label')
             def decoder(s):
                 s = sf.encoding_to_selfies(s, vocab_itos, enc_type='label')

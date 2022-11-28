@@ -116,7 +116,7 @@ export default {
         for (let i = 0; this.stonedResults < this.stonedCount; i++) {
           let mutated = 0;
           let new_selfies = this.selfies.map((s) => {
-            if (mutated < this.maxMutations && 1 / this.selfies.length < Math.random()) {
+            if (mutated < this.maxMutations && 1 / this.selfies.length > Math.random()) {
               mutated += 1;
               return Math.floor(Math.random() * this.vocabSize);
             } else {
@@ -157,7 +157,7 @@ export default {
         for (let i = 0; newResults < this.stonedCount; i++) {
           let mutated = 0;
           let new_selfies = this.mutatedSelfies[i % this.stonedCount].map((s) => {
-            if (mutated < this.maxMutations && 1 / this.selfies.length < Math.random()) {
+            if (mutated < this.maxMutations && 1 / this.selfies.length > Math.random()) {
               mutated += 1;
               return Math.floor(Math.random() * (this.vocabSize));
             } else {

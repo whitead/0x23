@@ -127,7 +127,7 @@ methods: {
     this.doStoned = true;
     if (this.smiles_str.length == 0) {
       //demo
-      this.internalSMILES = 'C1=CC2=C(C=C1O)C(=CN2)CCN'
+      this.internalSMILES = 'CCCCCc1cc(c2c(c1)OC([C@H]3[C@H]2C=C(CC3)C)(C)C)O'
     } else
       this.internalSMILES = this.smiles_str;
       // trigger update
